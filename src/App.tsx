@@ -26,6 +26,8 @@ import Comprobante from "./pages/Comprobante";
 import ReporteMensual from "./pages/ReporteMensual";
 import ReporteProductos from "./pages/ReporteProductos";
 
+import Informes from "./pages/Informes";
+
 export interface ProductoCarrito {
   id: string;
   nombre: string;
@@ -88,6 +90,7 @@ function App() {
         <Route path="/ofertas" element={<Ofertas />} />
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
+        <Route path="/informes" element={<Informes />} />
 
         {/* 🔹 CARRITO */}
         <Route

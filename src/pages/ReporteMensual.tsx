@@ -16,31 +16,31 @@ function ReporteMensual() {
   }, []);
 
   return (
-    <div className="container mt-4">
-      <h2>📊 Reporte mensual de ventas</h2>
+  <>
+    <h4 className="mb-3">📅 Reporte mensual</h4>
 
-      <table className="table mt-3">
-        <thead>
-          <tr>
-            <th>Año</th>
-            <th>Mes</th>
-            <th>Total Ventas</th>
-            <th>Compras</th>
+    <table className="table">
+      <thead>
+        <tr>
+          <th>Año</th>
+          <th>Mes</th>
+          <th>Ventas totales</th>
+          <th>Compras</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((r, i) => (
+          <tr key={i}>
+            <td>{r._id.year}</td>
+            <td>{r._id.month}</td>
+            <td>S/ {r.totalVentas}</td>
+            <td>{r.cantidadCompras}</td>
           </tr>
-        </thead>
-        <tbody>
-          {data.map((r, i) => (
-            <tr key={i}>
-              <td>{r._id.year}</td>
-              <td>{r._id.month}</td>
-              <td>S/ {r.totalVentas}</td>
-              <td>{r.cantidadCompras}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+        ))}
+      </tbody>
+    </table>
+  </>
+);
 }
 
 export default ReporteMensual;

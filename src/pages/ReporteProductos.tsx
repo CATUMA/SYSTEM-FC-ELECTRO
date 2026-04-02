@@ -16,29 +16,29 @@ function ReporteProductos() {
   }, []);
 
   return (
-    <div className="container mt-4">
-      <h2>🔥 Productos más vendidos</h2>
+  <>
+    <h4 className="mb-3">🔥 Productos más vendidos</h4>
 
-      <table className="table mt-3">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Cantidad vendida</th>
-            <th>Total ganado</th>
+    <table className="table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Cantidad vendida</th>
+          <th>Total ganado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((p, i) => (
+          <tr key={i}>
+            <td>{p._id}</td>
+            <td>{p.totalVendido}</td>
+            <td>S/ {p.totalGanado}</td>
           </tr>
-        </thead>
-        <tbody>
-          {data.map((p, i) => (
-            <tr key={i}>
-              <td>{p._id}</td>
-              <td>{p.totalVendido}</td>
-              <td>S/ {p.totalGanado}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+        ))}
+      </tbody>
+    </table>
+  </>
+);
 }
 
 export default ReporteProductos;
