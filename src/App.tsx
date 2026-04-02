@@ -25,6 +25,7 @@ import Historial from "./pages/Historial";
 import Comprobante from "./pages/Comprobante";
 import ReporteMensual from "./pages/ReporteMensual";
 import ReporteProductos from "./pages/ReporteProductos";
+import AdminLayout from "./pages/admin/AdminLayout";
 
 import Informes from "./pages/Informes";
 
@@ -146,10 +147,43 @@ function App() {
           path="/admin"
           element={
             <ProtectedRoute roles={["admin", "vendedor"]}>
-              <AdminProductos />
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          {/* 👉 REDIRECCIÓN AUTOMÁTICA */}
+          <Route index element={<Navigate to="productos" />} />
+
+          {/* 👉 RUTAS */}
+          <Route path="productos" element={<AdminProductos />} />
+
+          <Route
+            path="usuarios"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <AdminUsuarios />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="clientes"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <BuscarClientes />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="historial/:id"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <HistorialCliente />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
 
         {/* 🔹 SOLO ADMIN */}
         <Route

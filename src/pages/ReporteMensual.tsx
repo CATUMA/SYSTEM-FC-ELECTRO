@@ -9,6 +9,12 @@ type Reporte = {
 function ReporteMensual() {
   const [data, setData] = useState<Reporte[]>([]);
 
+  const meses = [
+  "Enero", "Febrero", "Marzo", "Abril",
+  "Mayo", "Junio", "Julio", "Agosto",
+  "Septiembre", "Octubre", "Noviembre", "Diciembre"
+];
+
   useEffect(() => {
     fetch("http://localhost:4000/api/compras/reporte/mensual")
       .then(res => res.json())
@@ -32,7 +38,7 @@ function ReporteMensual() {
         {data.map((r, i) => (
           <tr key={i}>
             <td>{r._id.year}</td>
-            <td>{r._id.month}</td>
+            <td>{meses[r._id.month - 1]}</td>
             <td>S/ {r.totalVentas}</td>
             <td>{r.cantidadCompras}</td>
           </tr>

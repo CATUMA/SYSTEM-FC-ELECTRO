@@ -1,0 +1,75 @@
+import { useState } from "react";
+import AdminProductos from "./AdminProductos";
+import AdminUsuarios from "./AdminUsuarios";
+import BuscarClientes from "./BuscarClientes";
+import { useAuth } from "../../context/useAuth";
+
+function AdminLayout() {
+
+  const [tab, setTab] = useState("productos");
+  const { user } = useAuth();
+
+  return (
+    <div className="container my-5">
+
+      {/* HEADER */}
+      <div className="mb-4 p-4 rounded text-white"
+        style={{
+          background: "linear-gradient(90deg, #3a0ca3, #4361ee)"
+        }}>
+        <h2 className="fw-bold">🛠 Panel de Administración</h2>
+        <p className="mb-0">Gestiona todo el sistema</p>
+      </div>
+
+      {/* BOTONES (como informes) */}
+      <div className="mb-4 d-flex gap-2 flex-wrap">
+
+        {/* PRODUCTOS (admin + vendedor) */}
+        <button
+          className={`btn ${tab === "productos" ? "btn-primary" : "btn-outline-primary"}`}
+          onClick={() => setTab("productos")}
+        >
+          Productos
+        </button>
+
+        {/* SOLO ADMIN */}
+        {user?.rol === "admin" && (
+          <>
+            <button
+              className={`btn ${tab === "usuarios" ? "btn-dark" : "btn-outline-dark"}`}
+              onClick={() => setTab("usuarios")}
+            >
+              Usuarios
+            </button>
+
+            <button
+              className={`btn ${tab === "clientes" ? "btn-success" : "btn-outline-success"}`}
+              onClick={() => setTab("clientes")}
+            >
+              Clientes
+            </button>
+          </>
+        )}
+
+      </div>
+
+      {/* CONTENIDO */}
+      <div className="card shadow border-0 p-4">
+
+        {tab === "productos" && <AdminProductos />}
+
+        {tab === "usuarios" && user?.rol === "admin" && (
+          <AdminUsuarios />
+        )}
+
+        {tab === "clientes" && user?.rol === "admin" && (
+          <BuscarClientes />
+        )}
+
+      </div>
+
+    </div>
+  );
+}
+
+export default AdminLayout;
