@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "./context/useAuth";
 
@@ -13,11 +13,10 @@ import Login from "./pages/Login";
 import Registro from "./pages/Registro";
 import Ofertas from "./pages/Ofertas";
 import SoporteTecnico from "./pages/SoporteTecnico";
-import HistorialSoporte from "./pages/HistorialSoporte"; // 🔥 NUEVO
-import AdminSoporte from "./pages/admin/AdminSoporte"; // 🔥 NUEVO
+import HistorialSoporte from "./pages/HistorialSoporte";
+import AdminSoporte from "./pages/admin/AdminSoporte";
 
-import AdminProductos from "./pages/admin/AdminProductos";
-import AdminUsuarios from "./pages/admin/AdminUsuarios";
+
 import BuscarClientes from "./pages/admin/BuscarClientes";
 import HistorialCliente from "./pages/admin/HistorialCliente";
 
@@ -35,6 +34,14 @@ export interface ProductoCarrito {
   precio: number;
   imagen: string;
   cantidad: number;
+}
+
+// 🔥 WRAPPER PARA HISTORIAL (SOLUCIÓN CLAVE)
+function HistorialWrapper() {
+  const { id } = useParams();
+  if (!id) return <div>ID inválido</div>;
+
+  return <HistorialCliente clienteId={id} />;
 }
 
 function App() {
@@ -84,7 +91,7 @@ function App() {
       <Navbar />
 
       <Routes>
-        {/* 🔹 RUTAS GENERALES */}
+
         <Route path="/" element={<Navigate to="/inicio" />} />
         <Route path="/inicio" element={<Inicio />} />
         <Route path="/productos" element={<Productos agregarAlCarrito={agregarAlCarrito} />} />
@@ -93,7 +100,6 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/informes" element={<Informes />} />
 
-        {/* 🔹 CARRITO */}
         <Route
           path="/carrito"
           element={
@@ -105,11 +111,9 @@ function App() {
           }
         />
 
-        {/* 🔹 CLIENTE */}
         <Route path="/historial" element={<Historial />} />
         <Route path="/comprobante" element={<Comprobante />} />
 
-        {/* 🔥 SOPORTE CLIENTE */}
         <Route
           path="/soporte"
           element={
@@ -128,7 +132,6 @@ function App() {
           }
         />
 
-        {/* 🔥 PANEL SOPORTE */}
         <Route
           path="/admin/soporte"
           element={
@@ -138,11 +141,10 @@ function App() {
           }
         />
 
-        {/* 🔹 REPORTES */}
         <Route path="/reporte-mensual" element={<ReporteMensual />} />
         <Route path="/reporte-productos" element={<ReporteProductos />} />
 
-        {/* 🔹 ADMIN + VENDEDOR */}
+        {/* 🔥 ADMIN */}
         <Route
           path="/admin"
           element={
@@ -150,71 +152,30 @@ function App() {
               <AdminLayout />
             </ProtectedRoute>
           }
-        >
-          {/* 👉 REDIRECCIÓN AUTOMÁTICA */}
-          <Route index element={<Navigate to="productos" />} />
-
-          {/* 👉 RUTAS */}
-          <Route path="productos" element={<AdminProductos />} />
-
-          <Route
-            path="usuarios"
-            element={
-              <ProtectedRoute roles={["admin"]}>
-                <AdminUsuarios />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="clientes"
-            element={
-              <ProtectedRoute roles={["admin"]}>
-                <BuscarClientes />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="historial/:id"
-            element={
-              <ProtectedRoute roles={["admin"]}>
-                <HistorialCliente />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
-
-        {/* 🔹 SOLO ADMIN */}
-        <Route
-          path="/admin/usuarios"
-          element={
-            <ProtectedRoute roles={["admin"]}>
-              <AdminUsuarios />
-            </ProtectedRoute>
-          }
         />
 
+        {/* 🔥 CORREGIDO */}
         <Route
           path="/admin/clientes"
           element={
             <ProtectedRoute roles={["admin"]}>
-              <BuscarClientes />
+              <BuscarClientes onVerHistorial={() => {}} />
             </ProtectedRoute>
           }
         />
 
+        {/* 🔥 CORREGIDO */}
         <Route
           path="/admin/historial/:id"
           element={
             <ProtectedRoute roles={["admin"]}>
-              <HistorialCliente />
+              <HistorialWrapper />
             </ProtectedRoute>
           }
         />
 
-        {/* 🔹 DEFAULT */}
         <Route path="*" element={<Navigate to="/inicio" />} />
+
       </Routes>
 
       <Footer />
