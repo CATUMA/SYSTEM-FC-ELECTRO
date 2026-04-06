@@ -13,6 +13,8 @@ function Informes() {
     return <Navigate to="/inicio" />;
   }
 
+  
+
   return (
     <div className="container mt-4">
 

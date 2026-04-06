@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 type Usuario = {
   _id: string;
@@ -8,81 +7,125 @@ type Usuario = {
   rol: string;
 };
 
-function BuscarClientes() {
+type Props = {
+  onVerHistorial: (id: string) => void;
+};
+
+function BuscarClientes({ onVerHistorial }: Props) {
 
   const [texto, setTexto] = useState("");
   const [clientes, setClientes] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(false);
+  const [mensaje, setMensaje] = useState("");
 
-  const navigate = useNavigate();
-
-  // 🔍 BUSCAR
   const buscar = async () => {
-    if (!texto.trim()) return;
+
+    if (!texto.trim()) {
+      setMensaje("⚠️ Ingresa un nombre o correo para buscar");
+      setClientes([]);
+      return;
+    }
 
     setLoading(true);
+    setMensaje("");
 
     try {
       const res = await fetch(
         `http://localhost:4000/api/auth/usuarios/buscar/${texto}`
       );
 
-      const data = await res.json();
-      setClientes(data);
+      const data: Usuario[] = await res.json();
+
+      if (!data || data.length === 0) {
+        setClientes([]);
+        setMensaje("❌ Usuario no registrado");
+      } else {
+        setClientes(data);
+      }
 
     } catch (error) {
       console.error("Error buscando clientes", error);
+      setMensaje("🚨 Error al buscar clientes");
     } finally {
       setLoading(false);
     }
   };
 
+  const irHistorial = (id: string) => {
+    if (!id) {
+      setMensaje("⚠️ Cliente inválido");
+      return;
+    }
+    onVerHistorial(id);
+  };
+
   return (
     <div className="container my-5">
 
-      <h2>Buscar Clientes</h2>
+      <div className="mb-4 p-4 rounded text-white"
+        style={{ background: "linear-gradient(90deg, #11998e, #38ef7d)" }}>
+        <h3 className="fw-bold mb-1">👥 Gestión de Clientes</h3>
+        <p className="mb-0">Busca y consulta clientes registrados</p>
+      </div>
 
-      {/* INPUT */}
-      <div className="d-flex gap-2 my-3">
+      <div className="input-group my-4 shadow-sm">
         <input
           type="text"
           className="form-control"
-          placeholder="Buscar por nombre o correo"
+          placeholder="Buscar por nombre o correo..."
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && buscar()}
         />
 
-        <button className="btn btn-primary" onClick={buscar}>
+        <button className="btn btn-success px-4" onClick={buscar}>
           Buscar
         </button>
       </div>
 
-      {/* LOADING */}
-      {loading && <p>Buscando...</p>}
-
-      {/* SIN RESULTADOS */}
-      {!loading && clientes.length === 0 && texto && (
-        <p>No se encontraron clientes</p>
+      {mensaje && (
+        <div className="alert alert-warning text-center">
+          {mensaje}
+        </div>
       )}
 
-      {/* RESULTADOS */}
-      {clientes.map((c) => (
-        <div
-          key={c._id}
-          className="border p-3 mb-2 rounded shadow-sm"
-          style={{ cursor: "pointer", transition: "0.2s" }}
-          onClick={() => navigate(`/admin/historial/${c._id}`)}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
-        >
-          <strong>{c.nombre}</strong>
-          <p className="mb-0">{c.correo}</p>
-
-          <small className="text-muted">
-            Click para ver historial
-          </small>
+      {loading && (
+        <div className="text-center my-4">
+          <div className="spinner-border text-success"></div>
         </div>
-      ))}
+      )}
+
+      <div className="row">
+        {clientes.map((c) => (
+          <div key={c._id} className="col-md-6 mb-3">
+
+            <div
+              className="card shadow-sm p-3"
+              style={{ cursor: "pointer" }}
+              onClick={() => irHistorial(c._id)}
+            >
+              <strong>{c.nombre}</strong>
+              <small>{c.correo}</small>
+
+              <span className="badge bg-secondary mt-2">
+                {c.rol}
+              </span>
+
+              <button
+                className="btn btn-outline-primary btn-sm mt-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  irHistorial(c._id);
+                }}
+              >
+                Historial
+              </button>
+
+            </div>
+
+          </div>
+        ))}
+      </div>
 
     </div>
   );

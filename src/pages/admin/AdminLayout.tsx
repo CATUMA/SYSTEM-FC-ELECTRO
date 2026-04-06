@@ -2,29 +2,30 @@ import { useState } from "react";
 import AdminProductos from "./AdminProductos";
 import AdminUsuarios from "./AdminUsuarios";
 import BuscarClientes from "./BuscarClientes";
+import HistorialCliente from "./HistorialCliente";
 import { useAuth } from "../../context/useAuth";
 
 function AdminLayout() {
 
   const [tab, setTab] = useState("productos");
+  const [clienteId, setClienteId] = useState<string | null>(null);
   const { user } = useAuth();
 
   return (
     <div className="container my-5">
 
       {/* HEADER */}
-      <div className="mb-4 p-4 rounded text-white"
-        style={{
-          background: "linear-gradient(90deg, #3a0ca3, #4361ee)"
-        }}>
+      <div
+        className="mb-4 p-4 rounded text-white"
+        style={{ background: "linear-gradient(90deg, #3a0ca3, #4361ee)" }}
+      >
         <h2 className="fw-bold">🛠 Panel de Administración</h2>
         <p className="mb-0">Gestiona todo el sistema</p>
       </div>
 
-      {/* BOTONES (como informes) */}
+      {/* BOTONES */}
       <div className="mb-4 d-flex gap-2 flex-wrap">
 
-        {/* PRODUCTOS (admin + vendedor) */}
         <button
           className={`btn ${tab === "productos" ? "btn-primary" : "btn-outline-primary"}`}
           onClick={() => setTab("productos")}
@@ -32,7 +33,6 @@ function AdminLayout() {
           Productos
         </button>
 
-        {/* SOLO ADMIN */}
         {user?.rol === "admin" && (
           <>
             <button
@@ -50,7 +50,6 @@ function AdminLayout() {
             </button>
           </>
         )}
-
       </div>
 
       {/* CONTENIDO */}
@@ -63,7 +62,16 @@ function AdminLayout() {
         )}
 
         {tab === "clientes" && user?.rol === "admin" && (
-          <BuscarClientes />
+          <BuscarClientes
+            onVerHistorial={(id: string) => {
+              setClienteId(id);
+              setTab("historial");
+            }}
+          />
+        )}
+
+        {tab === "historial" && clienteId && (
+          <HistorialCliente clienteId={clienteId} />
         )}
 
       </div>
