@@ -4,11 +4,13 @@ import logo from "../assets/logo.png";
 import { useAuth } from "../context/useAuth";
 import { useState, useEffect } from "react";
 
-// ✅ TIPADO CORRECTO (REEMPLAZA any)
+// ✅ NUEVO TIPO CORRECTO
 type Notificacion = {
-  _id: string;
-  nombre: string;
-  tipoProducto: string;
+  soporteId: string;
+  mensaje: string;
+  fecha?: string;
+  ticket: string;
+  cliente?: string;
 };
 
 function Navbar() {
@@ -24,21 +26,33 @@ function Navbar() {
     return null;
   });
 
-  // ✅ TIPADO FUERTE
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
 
-  // 🔔 CARGAR NOTIFICACIONES
+  // 🔔 NOTIFICACIONES DINÁMICAS (CLIENTE Y SOPORTE)
   useEffect(() => {
-    if (!user || user.rol !== "soporte") return;
+    if (!user) return;
 
     const cargar = async () => {
       try {
-        const res = await fetch("http://localhost:4000/api/soporte/notificaciones");
+        let url = "";
+
+        if (user.rol === "cliente") {
+          url = `http://localhost:4000/api/soporte/notificaciones/${user.id}`;
+        }
+
+        if (user.rol === "soporte") {
+          url = `http://localhost:4000/api/soporte/notificaciones-soporte`;
+        }
+
+        if (!url) return;
+
+        const res = await fetch(url);
         const data = await res.json();
 
         if (Array.isArray(data)) {
           setNotificaciones(data);
         }
+
       } catch (error) {
         console.error("Error notificaciones", error);
       }
@@ -118,6 +132,11 @@ function Navbar() {
                   Soporte
                 </Link>
               </li>
+              <li>
+                <Link className="nav-link text-white" to="/mis-soportes">
+                  Mis soportes
+                </Link>
+              </li>
             </>
           )}
 
@@ -161,8 +180,8 @@ function Navbar() {
             <FaShoppingCart size={18} color="white" />
           </Link>
 
-          {/* 🔔 NOTIFICACIONES */}
-          {user?.rol === "soporte" && (
+          {/* 🔔 NOTIFICACIONES UNIVERSAL */}
+          {(user?.rol === "cliente" || user?.rol === "soporte") && (
             <div className="dropdown position-relative">
 
               <FaBell
@@ -178,32 +197,40 @@ function Navbar() {
                 </span>
               )}
 
-              <ul className="dropdown-menu dropdown-menu-end p-2" style={{ width: "280px" }}>
-                <h6 className="dropdown-header">Notificaciones</h6>
+              <ul className="dropdown-menu dropdown-menu-end p-2" style={{ width: "300px" }}>
+                <h6 className="dropdown-header">Mensajes</h6>
 
                 {notificaciones.length === 0 ? (
-                  <li className="text-center text-muted">Sin notificaciones</li>
+                  <li className="text-center text-muted">Sin mensajes</li>
                 ) : (
-                  notificaciones.map((n) => (
-                    <li key={n._id} className="dropdown-item small">
+                  notificaciones.map((n, i) => (
+                    <li key={i} className="dropdown-item small">
 
-                      <strong>{n.nombre}</strong>
-                      <br />
-                      <span className="text-muted">{n.tipoProducto}</span>
+                      <div>
+                        <strong>{n.ticket}</strong>
+                        {n.cliente && (
+                          <>
+                            <br />
+                            <span className="text-muted">{n.cliente}</span>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="mt-1">{n.mensaje}</div>
 
                       <button
-                        className="btn btn-sm btn-outline-primary mt-1 w-100"
+                        className="btn btn-sm btn-outline-success mt-2 w-100"
                         onClick={async () => {
-                          await fetch(`http://localhost:4000/api/soporte/notificaciones/${n._id}`, {
+                          await fetch(`http://localhost:4000/api/soporte/${n.soporteId}/leido`, {
                             method: "PUT",
                           });
 
                           setNotificaciones((prev) =>
-                            prev.filter((item) => item._id !== n._id)
+                            prev.filter((_, index) => index !== i)
                           );
                         }}
                       >
-                        Marcar como leído
+                        ✔ Marcar como leído
                       </button>
 
                     </li>
@@ -213,16 +240,13 @@ function Navbar() {
             </div>
           )}
 
-          {/* ⚙️ */}
-          {user && user.rol !== "soporte" && (
+          {/* ⚙️ SOLO ADMIN */}
+          {user?.rol === "admin" && (
             <FaCog
               size={18}
               color="white"
               style={{ cursor: "pointer" }}
-              onClick={() => {
-                if (user.rol === "cliente") navigate("/soporte");
-                if (user.rol === "admin") navigate("/admin");
-              }}
+              onClick={() => navigate("/admin")}
             />
           )}
 
@@ -230,7 +254,6 @@ function Navbar() {
           {user ? (
             <div className="dropdown">
               <div data-bs-toggle="dropdown" style={{ cursor: "pointer" }}>
-
                 {preview || user?.foto ? (
                   <img
                     src={preview || user?.foto}
@@ -245,12 +268,10 @@ function Navbar() {
                 ) : (
                   <FaUser size={20} color="white" />
                 )}
-
               </div>
 
               <ul className="dropdown-menu dropdown-menu-end p-3 shadow" style={{ width: "260px" }}>
                 <div className="text-center">
-
                   <img
                     src={preview || user?.foto || "https://via.placeholder.com/80"}
                     style={{
