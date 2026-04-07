@@ -253,6 +253,7 @@ function Productos({ agregarAlCarrito }: Props) {
       </div>
 
     </div>
+    
   );
 }
 

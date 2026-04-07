@@ -2,15 +2,36 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import logo from "../assets/logo.png";
 import { useAuth } from "../context/useAuth";
+import { FaEnvelope, FaLock } from "react-icons/fa";
 
 function Login() {
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // 🔥 VALIDACIÓN
+  const validar = () => {
+    if (!correo.includes("@")) return "Correo inválido";
+    if (password.length < 6) return "La contraseña debe tener mínimo 6 caracteres";
+    return "";
+  };
+
   const handleLogin = async () => {
+    setError("");
+
+    const errorValidacion = validar();
+    if (errorValidacion) {
+      setError(errorValidacion);
+      return;
+    }
+
+    setLoading(true);
+
     try {
       const res = await fetch("http://localhost:4000/api/auth/login", {
         method: "POST",
@@ -18,72 +39,134 @@ function Login() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          correo: correo,
-          password: password,
+          correo,
+          password,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.mensaje);
+        setError(data.mensaje || "Error en login");
         return;
       }
 
-      // Guardar usuario
       login(data.usuario);
 
-      // Redirigir
-      if (data.usuario.rol === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/inicio");
+      // 🔥 REDIRECCIÓN SEGURA
+      switch (data.usuario.rol) {
+        case "admin":
+          navigate("/admin");
+          break;
+        case "soporte":
+          navigate("/soporte-panel");
+          break;
+        default:
+          navigate("/inicio");
       }
 
     } catch (error) {
       console.error(error);
-      alert("Error en login");
+      setError("Error de conexión con el servidor");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center" style={{ minHeight: "80vh" }}>
-      <div className="card p-4 shadow" style={{ width: "400px" }}>
-        
-        <div className="text-center mb-4">
-          <img src={logo} alt="FSelectro" width="120" />
-          <p className="text-muted mt-2">Accede a tu cuenta</p>
-        </div>
+    <div
+      className="d-flex justify-content-center align-items-center"
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #3a86ff, #00b4d8)",
+      }}
+    >
+      <div
+        className="card shadow-lg border-0"
+        style={{
+          width: "400px",
+          borderRadius: "20px",
+        }}
+      >
+        <div className="card-body p-4">
 
-        <div className="mb-3">
-          <label className="form-label">Correo electrónico</label>
-          <input
-            type="email"
-            className="form-control"
-            value={correo}
-            onChange={(e) => setCorreo(e.target.value)}
-          />
-        </div>
+          {/* HEADER */}
+          <div className="text-center mb-4">
+            <img src={logo} alt="logo" width="100" />
+            <h5 className="fw-bold mt-3">Bienvenido</h5>
+            <p className="text-muted">Inicia sesión en tu cuenta</p>
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">Contraseña</label>
-          <input
-            type="password"
-            className="form-control"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+          {/* ERROR */}
+          {error && (
+            <div className="alert alert-danger text-center py-2">
+              {error}
+            </div>
+          )}
 
-        <button className="btn btn-primary w-100" onClick={handleLogin}>
-          Ingresar
-        </button>
+          {/* EMAIL */}
+          <div className="mb-3">
+            <label className="form-label">Correo electrónico</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <FaEnvelope />
+              </span>
+              <input
+                type="email"
+                className="form-control"
+                value={correo}
+                onChange={(e) => setCorreo(e.target.value)}
+                placeholder="ejemplo@gmail.com"
+                required
+                autoComplete="email"
+              />
+            </div>
+          </div>
 
-        <div className="text-center mt-3">
-          <small>
-            ¿No tienes tu cuenta?{" "}
-            <Link to="/registro">Regístrate</Link>
-          </small>
+          {/* PASSWORD */}
+          <div className="mb-3">
+            <label className="form-label">Contraseña</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <FaLock />
+              </span>
+              <input
+                type="password"
+                className="form-control"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                required
+                minLength={6}
+                autoComplete="current-password"
+              />
+            </div>
+            <small className="text-muted">
+              La contraseña debe tener al menos 6 caracteres
+            </small>
+          </div>
+
+          {/* BUTTON */}
+          <button
+            className="btn btn-primary w-100 mt-2"
+            onClick={handleLogin}
+            disabled={loading}
+            style={{
+              borderRadius: "10px",
+              fontWeight: "bold",
+            }}
+          >
+            {loading ? "Ingresando..." : "Ingresar"}
+          </button>
+
+          {/* FOOTER */}
+          <div className="text-center mt-3">
+            <small>
+              ¿No tienes cuenta?{" "}
+              <Link to="/registro">Regístrate</Link>
+            </small>
+          </div>
+
         </div>
       </div>
     </div>

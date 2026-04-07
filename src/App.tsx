@@ -16,7 +16,6 @@ import SoporteTecnico from "./pages/SoporteTecnico";
 import HistorialSoporte from "./pages/HistorialSoporte";
 import AdminSoporte from "./pages/admin/AdminSoporte";
 
-
 import BuscarClientes from "./pages/admin/BuscarClientes";
 import HistorialCliente from "./pages/admin/HistorialCliente";
 
@@ -36,7 +35,7 @@ export interface ProductoCarrito {
   cantidad: number;
 }
 
-// 🔥 WRAPPER PARA HISTORIAL (SOLUCIÓN CLAVE)
+// 🔥 WRAPPER PARA HISTORIAL
 function HistorialWrapper() {
   const { id } = useParams();
   if (!id) return <div>ID inválido</div>;
@@ -114,6 +113,7 @@ function App() {
         <Route path="/historial" element={<Historial />} />
         <Route path="/comprobante" element={<Comprobante />} />
 
+        {/* 🔥 CLIENTE */}
         <Route
           path="/soporte"
           element={
@@ -132,8 +132,19 @@ function App() {
           }
         />
 
+        {/* 🔥 SOPORTE / ADMIN */}
         <Route
           path="/admin/soporte"
+          element={
+            <ProtectedRoute roles={["soporte", "admin"]}>
+              <AdminSoporte />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ 🔥 NUEVA RUTA (SOLUCIÓN REAL) */}
+        <Route
+          path="/soporte-panel"
           element={
             <ProtectedRoute roles={["soporte", "admin"]}>
               <AdminSoporte />
@@ -154,7 +165,6 @@ function App() {
           }
         />
 
-        {/* 🔥 CORREGIDO */}
         <Route
           path="/admin/clientes"
           element={
@@ -164,7 +174,6 @@ function App() {
           }
         />
 
-        {/* 🔥 CORREGIDO */}
         <Route
           path="/admin/historial/:id"
           element={
