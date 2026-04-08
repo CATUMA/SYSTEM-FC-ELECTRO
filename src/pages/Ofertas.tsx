@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { FaLock } from "react-icons/fa";
 import { useAuth } from "../context/useAuth";
 import { useEffect, useState } from "react";
+import type { ProductoCarrito } from "../App";
 
 type Producto = {
   _id: string;
@@ -10,8 +11,11 @@ type Producto = {
   imagen: string;
 };
 
-function Ofertas() {
+interface Props {
+  agregarAlCarrito: (producto: ProductoCarrito) => void;
+}
 
+function Ofertas({ agregarAlCarrito }: Props) {
   const { user } = useAuth();
   const [ofertas, setOfertas] = useState<Producto[]>([]);
 
@@ -20,13 +24,12 @@ function Ofertas() {
     if (!user) return;
 
     fetch("http://localhost:4000/api/productos/ofertas")
-      .then(res => res.json())
-      .then(data => setOfertas(data))
-      .catch(err => console.error(err));
-
+      .then((res) => res.json())
+      .then((data: Producto[]) => setOfertas(data))
+      .catch((err) => console.error(err));
   }, [user]);
 
-  // 🔒 SI NO ESTÁ LOGUEADO → TU VISTA ACTUAL
+  // 🔒 SI NO ESTÁ LOGUEADO → SE MANTIENE TU LÓGICA
   if (!user) {
     return (
       <>
@@ -37,7 +40,6 @@ function Ofertas() {
           </h2>
 
           <div className="row g-4">
-
             {[1, 2, 3].map((v) => (
               <div className="col-md-4" key={v}>
                 <div className="card shadow-sm">
@@ -50,7 +52,6 @@ function Ofertas() {
                 </div>
               </div>
             ))}
-
           </div>
         </div>
 
@@ -95,7 +96,7 @@ function Ofertas() {
     );
   }
 
-  // 🔥 SI ESTÁ LOGUEADO → OFERTAS REALES
+  // 🔥 USUARIO LOGUEADO → OFERTAS
   return (
     <div className="container my-5">
 
@@ -110,28 +111,59 @@ function Ofertas() {
         ) : (
           ofertas.map((p) => (
             <div className="col-md-4" key={p._id}>
-              <div className="card shadow">
+
+              <div
+                className="card h-100 shadow-sm border-0"
+                style={{ borderRadius: "15px", transition: "0.3s" }}
+              >
 
                 <img
                   src={p.imagen}
                   className="card-img-top"
+                  style={{
+                    height: "250px",
+                    objectFit: "contain",
+                    background: "#f8f9fa"
+                  }}
                 />
 
-                <div className="card-body text-center">
+                <div className="card-body text-center d-flex flex-column">
 
-                  <h5>{p.nombre}</h5>
+                  <h5 className="fw-bold">{p.nombre}</h5>
 
                   <p className="text-danger fw-bold fs-5">
                     S/ {p.precio}
                   </p>
 
-                  <span className="badge bg-success">
+                  {/* TEXTO COMERCIAL */}
+                  <p className="text-muted small">
+                    Aprovecha esta oportunidad única 🔥
+                  </p>
+
+                  <span className="badge bg-success mb-3">
                     OFERTA
                   </span>
+
+                  {/* BOTÓN AGREGAR */}
+                  <button
+                    className="btn btn-primary mt-auto"
+                    onClick={() =>
+                      agregarAlCarrito({
+                        id: p._id,
+                        nombre: p.nombre,
+                        precio: p.precio,
+                        imagen: p.imagen,
+                        cantidad: 1,
+                      })
+                    }
+                  >
+                    🛒 Agregar al carrito
+                  </button>
 
                 </div>
 
               </div>
+
             </div>
           ))
         )}

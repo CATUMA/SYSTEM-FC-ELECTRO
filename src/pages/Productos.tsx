@@ -14,23 +14,15 @@ interface Producto {
   stock: number;
   imagen?: string;
   oferta?: boolean;
+  categoria?: string; // 🔥 NUEVO (opcional, no rompe nada)
 }
 
 function Productos({ agregarAlCarrito }: Props) {
-
   const { user } = useAuth();
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [busqueda, setBusqueda] = useState("");
-
-  // FILTROS
-  const [precioMin, setPrecioMin] = useState("");
-  const [precioMax, setPrecioMax] = useState("");
-  const [soloStock, setSoloStock] = useState(false);
-  const [soloOferta, setSoloOferta] = useState(false);
-
-  // ORDEN
-  const [orden, setOrden] = useState("");
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
 
   // PAGINACIÓN
   const [paginaActual, setPaginaActual] = useState(1);
@@ -46,40 +38,31 @@ function Productos({ agregarAlCarrito }: Props) {
     fetchData();
   }, []);
 
-  // FILTRAR
+  // 🔥 GENERAR CATEGORÍAS DINÁMICAS
+  const categorias = Array.from(
+    new Set(productos.map((p) => p.categoria).filter(Boolean))
+  ) as string[];
+
+  // ✅ FILTRO COMPLETO (BÚSQUEDA + CATEGORÍA)
   const productosFiltrados = productos.filter((p) => {
     const texto = (p.nombre + p.descripcion).toLowerCase();
     const coincideBusqueda = texto.includes(busqueda.toLowerCase());
 
-    const cumplePrecioMin = precioMin === "" || p.precio >= Number(precioMin);
-    const cumplePrecioMax = precioMax === "" || p.precio <= Number(precioMax);
+    const coincideCategoria =
+      categoriaSeleccionada === "" ||
+      p.categoria === categoriaSeleccionada;
 
-    const cumpleStock = !soloStock || p.stock > 0;
-    const cumpleOferta = !soloOferta || p.oferta;
-
-    return (
-      coincideBusqueda &&
-      cumplePrecioMin &&
-      cumplePrecioMax &&
-      cumpleStock &&
-      cumpleOferta
-    );
+    return coincideBusqueda && coincideCategoria;
   });
-
-  // ORDENAR (SIN MUTAR)
-  const productosOrdenados = [...productosFiltrados].sort((a, b) => {
-  if (orden === "asc") return a.precio - b.precio;
-  if (orden === "desc") return b.precio - a.precio;
-  return 0;
-});
 
   // PAGINACIÓN
   const indexInicio = (paginaActual - 1) * productosPorPagina;
-  const productosPagina = productosOrdenados.slice(
+  const productosPagina = productosFiltrados.slice(
     indexInicio,
     indexInicio + productosPorPagina
   );
-  const totalPaginas = Math.ceil(productosOrdenados.length / productosPorPagina);
+
+  const totalPaginas = Math.ceil(productosFiltrados.length / productosPorPagina);
 
   const enviarAOferta = async (id: string) => {
     await fetch(`http://localhost:4000/api/productos/oferta/${id}`, {
@@ -98,64 +81,40 @@ function Productos({ agregarAlCarrito }: Props) {
 
       <h2 className="fw-bold mb-4">🛒 Tienda FC Electro</h2>
 
-      {/* FILTROS */}
+      {/* 🔥 FILTROS */}
       <div className="card p-3 mb-4 shadow-sm">
-        <div className="row g-2">
+        <div className="row g-3">
 
-          <div className="col-md-3">
+          {/* 🔍 BUSCADOR */}
+          <div className="col-md-6">
             <input
               className="form-control"
-              placeholder="Buscar..."
+              placeholder="Buscar producto..."
               value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
+              onChange={(e) => {
+                setBusqueda(e.target.value);
+                setPaginaActual(1);
+              }}
             />
           </div>
 
-          <div className="col-md-2">
-            <input
-              type="number"
-              className="form-control"
-              placeholder="Precio min"
-              value={precioMin}
-              onChange={(e) => setPrecioMin(e.target.value)}
-            />
-          </div>
-
-          <div className="col-md-2">
-            <input
-              type="number"
-              className="form-control"
-              placeholder="Precio max"
-              value={precioMax}
-              onChange={(e) => setPrecioMax(e.target.value)}
-            />
-          </div>
-
-          <div className="col-md-2">
+          {/* 🔽 FILTRO POR CATEGORÍA */}
+          <div className="col-md-6">
             <select
               className="form-select"
-              onChange={(e) => setOrden(e.target.value)}
+              value={categoriaSeleccionada}
+              onChange={(e) => {
+                setCategoriaSeleccionada(e.target.value);
+                setPaginaActual(1);
+              }}
             >
-              <option value="">Ordenar</option>
-              <option value="asc">Precio ↑</option>
-              <option value="desc">Precio ↓</option>
+              <option value="">Todas las categorías</option>
+              {categorias.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
             </select>
-          </div>
-
-          <div className="col-md-3 d-flex gap-2">
-            <button
-              className={`btn ${soloStock ? "btn-success" : "btn-outline-success"}`}
-              onClick={() => setSoloStock(!soloStock)}
-            >
-              Stock
-            </button>
-
-            <button
-              className={`btn ${soloOferta ? "btn-warning" : "btn-outline-warning"}`}
-              onClick={() => setSoloOferta(!soloOferta)}
-            >
-              Ofertas
-            </button>
           </div>
 
         </div>
@@ -181,11 +140,11 @@ function Productos({ agregarAlCarrito }: Props) {
                 src={producto.imagen || "https://via.placeholder.com/300"}
                 className="card-img-top"
                 style={{
-                    height: "250px",
-                    width: "100%",
-                    objectFit: "contain",
-                    background: "#f8f9fa"
-                  }}
+                  height: "250px",
+                  width: "100%",
+                  objectFit: "contain",
+                  background: "#f8f9fa"
+                }}
               />
 
               <div className="card-body d-flex flex-column">
@@ -197,15 +156,32 @@ function Productos({ agregarAlCarrito }: Props) {
                   S/ {producto.precio}
                 </h5>
 
-                {producto.oferta && (
-                  <span className="badge bg-warning text-dark mb-2">🔥 Oferta</span>
-                )}
+                {/* 🔥 BADGES */}
+                <div className="d-flex gap-2 mb-2 flex-wrap">
 
-                {producto.stock > 0 ? (
-                  <span className="badge bg-success mb-2">Disponible</span>
-                ) : (
-                  <span className="badge bg-danger mb-2">Sin stock</span>
-                )}
+                  {producto.oferta && (
+                    <span className="badge bg-warning-subtle text-dark border">
+                      🔥 Oferta
+                    </span>
+                  )}
+
+                  {producto.stock > 0 ? (
+                    <span className="badge bg-success-subtle text-success border">
+                      Disponible
+                    </span>
+                  ) : (
+                    <span className="badge bg-danger-subtle text-danger border">
+                      Sin stock
+                    </span>
+                  )}
+
+                  {producto.categoria && (
+                    <span className="badge bg-info-subtle text-dark border">
+                      {producto.categoria}
+                    </span>
+                  )}
+
+                </div>
 
                 <button
                   className="btn btn-primary mt-auto"
@@ -225,10 +201,10 @@ function Productos({ agregarAlCarrito }: Props) {
 
                 {(user?.rol === "admin" || user?.rol === "vendedor") && !producto.oferta && (
                   <button
-                    className="btn btn-success mt-2"
+                    className="btn btn-outline-warning mt-2"
                     onClick={() => enviarAOferta(producto._id)}
                   >
-                    🔥 Oferta
+                    Marcar como oferta
                   </button>
                 )}
 
@@ -253,7 +229,6 @@ function Productos({ agregarAlCarrito }: Props) {
       </div>
 
     </div>
-    
   );
 }
 

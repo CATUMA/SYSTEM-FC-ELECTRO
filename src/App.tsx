@@ -95,7 +95,7 @@ function App() {
         <Route path="/" element={<Navigate to="/inicio" />} />
         <Route path="/inicio" element={<Inicio />} />
         <Route path="/productos" element={<Productos agregarAlCarrito={agregarAlCarrito} />} />
-        <Route path="/ofertas" element={<Ofertas />} />
+        <Route path="/ofertas" element={<Ofertas agregarAlCarrito={agregarAlCarrito} />}/>
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/informes" element={<Informes />} />

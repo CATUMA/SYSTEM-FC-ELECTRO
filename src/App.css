@@ -1,9 +1,28 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* RESET BASE */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
+
+/* 🔥 ESTRUCTURA GLOBAL PARA QUE EL FOOTER NO FLOTE */
+html, body, #root {
+  height: 100%;
+}
+
+/* CONTENEDOR PRINCIPAL */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* CONTENIDO CRECE Y EMPUJA EL FOOTER */
+.main-content {
+  flex: 1;
+}
+
+/* ===== TU DISEÑO ORIGINAL (SE MANTIENE) ===== */
 
 .logo {
   height: 6em;
@@ -11,9 +30,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }

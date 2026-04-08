@@ -8,3 +8,14 @@ html, body, #root {
   height: 100%;
   width: 100%;
 }
+/* 🔥 CONTENEDOR PRINCIPAL */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* 🔥 EMPUJA EL FOOTER ABAJO */
+.main-content {
+  flex: 1;
+}
