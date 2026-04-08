@@ -24,6 +24,7 @@ import Comprobante from "./pages/Comprobante";
 import ReporteMensual from "./pages/ReporteMensual";
 import ReporteProductos from "./pages/ReporteProductos";
 import AdminLayout from "./pages/admin/AdminLayout";
+import HistorialSoporteAdmin from "./pages/admin/HistorialSoporteAdmin";
 
 import Informes from "./pages/Informes";
 
@@ -132,17 +133,7 @@ function App() {
           }
         />
 
-        {/* 🔥 SOPORTE / ADMIN */}
-        <Route
-          path="/admin/soporte"
-          element={
-            <ProtectedRoute roles={["soporte", "admin"]}>
-              <AdminSoporte />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ✅ 🔥 NUEVA RUTA (SOLUCIÓN REAL) */}
+        {/* 🔥 PANEL SOPORTE */}
         <Route
           path="/soporte-panel"
           element={
@@ -155,7 +146,7 @@ function App() {
         <Route path="/reporte-mensual" element={<ReporteMensual />} />
         <Route path="/reporte-productos" element={<ReporteProductos />} />
 
-        {/* 🔥 ADMIN */}
+        {/* 🔥 ADMIN (AQUÍ ESTÁ LA CLAVE) */}
         <Route
           path="/admin"
           element={
@@ -163,25 +154,14 @@ function App() {
               <AdminLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          {/* 🔹 HIJOS DEL PANEL */}
+          <Route path="clientes" element={<BuscarClientes onVerHistorial={() => {}} />} />
+          <Route path="historial/:id" element={<HistorialWrapper />} />
 
-        <Route
-          path="/admin/clientes"
-          element={
-            <ProtectedRoute roles={["admin"]}>
-              <BuscarClientes onVerHistorial={() => {}} />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/historial/:id"
-          element={
-            <ProtectedRoute roles={["admin"]}>
-              <HistorialWrapper />
-            </ProtectedRoute>
-          }
-        />
+          {/* 🔥 SOLUCIÓN REAL */}
+          <Route path="historial-soporte" element={<HistorialSoporteAdmin />} />
+        </Route>
 
         <Route path="*" element={<Navigate to="/inicio" />} />
 

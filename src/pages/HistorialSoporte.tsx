@@ -1,26 +1,25 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 
-// ✅ Tipo de datos
+// ✅ TIPOS CORRECTOS
+type Mensaje = {
+  estado: string;
+  mensaje: string;
+  fecha?: string;
+};
+
 type Soporte = {
   _id: string;
   nombre: string;
   tipoProducto: string;
   estado: string;
-  mensajes: {
-    emisor: string;
-    mensaje: string;
-    fecha: string;
-  }[];
+  historial?: Mensaje[];
 };
 
 function HistorialSoporte() {
-
   const { user } = useAuth();
   const [servicios, setServicios] = useState<Soporte[]>([]);
-  const [mensajesInput, setMensajesInput] = useState<{ [key: string]: string }>({});
 
-  // ✅ FETCH DIRECTO (SOLUCIÓN LIMPIA)
   useEffect(() => {
     if (!user) return;
 
@@ -29,48 +28,27 @@ function HistorialSoporte() {
         const res = await fetch(
           `http://localhost:4000/api/soporte/usuario/${user.id}`
         );
-        const data = await res.json();
-        setServicios(data);
+
+        // ✅ TIPADO AQUÍ (CLAVE)
+        const data: Soporte[] = await res.json();
+
+        const filtrados = data.filter(
+          (s) =>
+            s.tipoProducto &&
+            s.tipoProducto.trim() !== "" &&
+            s.tipoProducto !== "Otro"
+        );
+
+        setServicios(filtrados);
+
       } catch (error) {
         console.error("Error al cargar historial:", error);
+        setServicios([]);
       }
     };
 
     fetchData();
   }, [user]);
-
-  // 📩 ENVIAR MENSAJE
-  const enviarMensaje = async (id: string) => {
-    const mensaje = mensajesInput[id];
-
-    if (!mensaje || !mensaje.trim()) return;
-
-    try {
-      await fetch(`http://localhost:4000/api/soporte/${id}/mensaje`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mensaje,
-          emisor: "cliente",
-        }),
-      });
-
-      // limpiar input
-      setMensajesInput((prev) => ({ ...prev, [id]: "" }));
-
-      // 🔥 recargar manual (NO dentro del effect)
-      const res = await fetch(
-        `http://localhost:4000/api/soporte/usuario/${user?.id}`
-      );
-      const data = await res.json();
-      setServicios(data);
-
-    } catch (error) {
-      console.error("Error enviando mensaje:", error);
-    }
-  };
 
   return (
     <div className="container mt-4">
@@ -87,13 +65,14 @@ function HistorialSoporte() {
             className="card shadow-sm mb-4 border-0"
             style={{ borderRadius: "12px" }}
           >
-
             {/* HEADER */}
             <div className="card-header d-flex justify-content-between bg-white">
               <div>
-                <strong>{s.tipoProducto}</strong>
+                <strong>Producto: {s.tipoProducto}</strong>
                 <br />
-                <small className="text-muted">{s.nombre}</small>
+                <small className="text-muted">
+                  Cliente: {s.nombre}
+                </small>
               </div>
 
               <span
@@ -109,63 +88,36 @@ function HistorialSoporte() {
               </span>
             </div>
 
-            {/* CHAT */}
+            {/* 🔥 SOLO MENSAJES DEL SISTEMA (NO CLIENTE) */}
             <div
               className="card-body"
-              style={{ maxHeight: "300px", overflowY: "auto", background: "#f8f9fa" }}
+              style={{
+                maxHeight: "300px",
+                overflowY: "auto",
+                background: "#f8f9fa"
+              }}
             >
-              {s.mensajes?.length > 0 ? (
-                s.mensajes.map((m, i) => (
-                  <div
-                    key={i}
-                    className={`d-flex mb-2 ${
-                      m.emisor === "cliente"
-                        ? "justify-content-end"
-                        : "justify-content-start"
-                    }`}
-                  >
+              {s.historial && s.historial.length > 0 ? (
+                s.historial.map((h, i) => (
+                  <div key={i} className="mb-2">
                     <div
                       style={{
-                        background:
-                          m.emisor === "cliente" ? "#0d6efd" : "#e9ecef",
-                        color: m.emisor === "cliente" ? "white" : "black",
+                        background: "#e9ecef",
                         padding: "8px 12px",
                         borderRadius: "12px",
-                        maxWidth: "70%",
+                        display: "inline-block"
                       }}
                     >
-                      <small>{m.mensaje}</small>
+                      <small>{h.mensaje}</small>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-muted text-center">Sin mensajes</p>
+                <p className="text-muted text-center">
+                  Sin historial
+                </p>
               )}
             </div>
-
-            {/* INPUT */}
-            <div className="card-footer bg-white d-flex gap-2">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Escribe un mensaje..."
-                value={mensajesInput[s._id] || ""}
-                onChange={(e) =>
-                  setMensajesInput((prev) => ({
-                    ...prev,
-                    [s._id]: e.target.value,
-                  }))
-                }
-              />
-
-              <button
-                className="btn btn-primary"
-                onClick={() => enviarMensaje(s._id)}
-              >
-                Enviar
-              </button>
-            </div>
-
           </div>
         ))
       )}

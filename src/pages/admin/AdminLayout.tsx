@@ -3,6 +3,7 @@ import AdminProductos from "./AdminProductos";
 import AdminUsuarios from "./AdminUsuarios";
 import BuscarClientes from "./BuscarClientes";
 import HistorialCliente from "./HistorialCliente";
+import HistorialSoporteAdmin from "./HistorialSoporteAdmin"; // ✅ NUEVO
 import { useAuth } from "../../context/useAuth";
 
 function AdminLayout() {
@@ -48,6 +49,14 @@ function AdminLayout() {
             >
               Clientes
             </button>
+
+            {/* 🔥 NUEVO BOTÓN */}
+            <button
+              className={`btn ${tab === "soporte" ? "btn-warning" : "btn-outline-warning"}`}
+              onClick={() => setTab("soporte")}
+            >
+              Historial Técnico
+            </button>
           </>
         )}
       </div>
@@ -72,6 +81,11 @@ function AdminLayout() {
 
         {tab === "historial" && clienteId && (
           <HistorialCliente clienteId={clienteId} />
+        )}
+
+        {/* 🔥 NUEVO CONTENIDO */}
+        {tab === "soporte" && user?.rol === "admin" && (
+          <HistorialSoporteAdmin />
         )}
 
       </div>

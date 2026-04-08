@@ -4,13 +4,12 @@ import logo from "../assets/logo.png";
 import { useAuth } from "../context/useAuth";
 import { useState, useEffect } from "react";
 
-// ✅ NUEVO TIPO CORRECTO
+// ✅ NUEVO TIPO
 type Notificacion = {
   soporteId: string;
   mensaje: string;
-  fecha?: string;
   ticket: string;
-  cliente?: string;
+  estado: string;
 };
 
 function Navbar() {
@@ -28,25 +27,16 @@ function Navbar() {
 
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
 
-  // 🔔 NOTIFICACIONES DINÁMICAS (CLIENTE Y SOPORTE)
+  // 🔔 NOTIFICACIONES NUEVAS (SOLO SISTEMA LIMPIO)
   useEffect(() => {
     if (!user) return;
 
     const cargar = async () => {
       try {
-        let url = "";
+        const res = await fetch(
+          `http://localhost:4000/api/soporte/notificaciones/${user.id}`
+        );
 
-        if (user.rol === "cliente") {
-          url = `http://localhost:4000/api/soporte/notificaciones/${user.id}`;
-        }
-
-        if (user.rol === "soporte") {
-          url = `http://localhost:4000/api/soporte/notificaciones-soporte`;
-        }
-
-        if (!url) return;
-
-        const res = await fetch(url);
         const data = await res.json();
 
         if (Array.isArray(data)) {
@@ -161,6 +151,8 @@ function Navbar() {
                   Informes
                 </Link>
               </li>
+
+              
             </>
           )}
 
@@ -180,8 +172,8 @@ function Navbar() {
             <FaShoppingCart size={18} color="white" />
           </Link>
 
-          {/* 🔔 NOTIFICACIONES UNIVERSAL */}
-          {(user?.rol === "cliente" || user?.rol === "soporte") && (
+          {/* 🔔 NOTIFICACIONES SIMPLES */}
+          {user && (
             <div className="dropdown position-relative">
 
               <FaBell
@@ -198,40 +190,23 @@ function Navbar() {
               )}
 
               <ul className="dropdown-menu dropdown-menu-end p-2" style={{ width: "300px" }}>
-                <h6 className="dropdown-header">Mensajes</h6>
+                <h6 className="dropdown-header">Notificaciones</h6>
 
                 {notificaciones.length === 0 ? (
-                  <li className="text-center text-muted">Sin mensajes</li>
+                  <li className="text-center text-muted">Sin notificaciones</li>
                 ) : (
                   notificaciones.map((n, i) => (
                     <li key={i} className="dropdown-item small">
 
                       <div>
                         <strong>{n.ticket}</strong>
-                        {n.cliente && (
-                          <>
-                            <br />
-                            <span className="text-muted">{n.cliente}</span>
-                          </>
-                        )}
                       </div>
 
                       <div className="mt-1">{n.mensaje}</div>
 
-                      <button
-                        className="btn btn-sm btn-outline-success mt-2 w-100"
-                        onClick={async () => {
-                          await fetch(`http://localhost:4000/api/soporte/${n.soporteId}/leido`, {
-                            method: "PUT",
-                          });
-
-                          setNotificaciones((prev) =>
-                            prev.filter((_, index) => index !== i)
-                          );
-                        }}
-                      >
-                        ✔ Marcar como leído
-                      </button>
+                      <small className="text-muted">
+                        Estado: {n.estado}
+                      </small>
 
                     </li>
                   ))
@@ -240,7 +215,7 @@ function Navbar() {
             </div>
           )}
 
-          {/* ⚙️ SOLO ADMIN */}
+          {/* ⚙️ ADMIN */}
           {user?.rol === "admin" && (
             <FaCog
               size={18}
